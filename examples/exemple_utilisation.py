@@ -17,6 +17,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+# Création du dossier outputs s'il n'existe pas
+outputs_dir = os.path.join(os.path.dirname(__file__), '..', 'outputs')
+os.makedirs(outputs_dir, exist_ok=True)
+
 from index import Camion, GrapheLivraison
 from tsp_solver import SolveurTSP
 from analyse_performances import AnalyseurPerformances
@@ -105,32 +109,39 @@ def exemple_2_analyse_complexite():
     print("\n📊 Analyse FORCE BRUTE (petites instances)...")
     analyseur.analyser_complexite_algorithme(
         methode='force_brute',
-        tailles=[3, 4, 5, 6, 7],
+        tailles=[3, 4, 5, 6, 7, 8, 9],  # Limité à 9 sites (optimal temps/démonstration)
         camion=camion,
-        repetitions=2
+        repetitions=2  # 2 répétitions suffisent pour les gros calculs
     )
     
     # Analyser glouton (peut gérer de grandes tailles)
     print("\n📊 Analyse GLOUTON (toutes tailles)...")
     analyseur.analyser_complexite_algorithme(
         methode='glouton',
-        tailles=[5, 10, 15, 20, 25, 30],
+        tailles=[3, 5, 8, 10, 12, 15, 18, 20, 25],  # Limité à 25 sites
         camion=camion,
-        repetitions=2
+        repetitions=5  # Plus de répétitions pour capturer les petits temps
     )
     
     # Analyser génétique
     print("\n📊 Analyse GÉNÉTIQUE (tailles moyennes)...")
     analyseur.analyser_complexite_algorithme(
         methode='genetique',
-        tailles=[5, 10, 15, 20],
+        tailles=[3, 5, 8, 10, 12, 15, 18, 20, 25],  # Limité à 25 sites
         camion=camion,
         repetitions=2
     )
     
     # Tracer les courbes de complexité
     print("\n📈 Génération des graphiques...")
-    analyseur.tracer_complexite_temporelle(sauvegarder='../outputs/complexite_temporelle.png')
+    
+    # Graphique de complexité temporelle
+    output_path_temps = os.path.join(outputs_dir, 'complexite_temporelle.png')
+    analyseur.tracer_complexite_temporelle(sauvegarder=output_path_temps)
+    
+    # Graphique d'évolution des coûts
+    output_path_cout = os.path.join(outputs_dir, 'evolution_cout_carburant.png')
+    analyseur.tracer_evolution_cout(sauvegarder=output_path_cout)
 
 
 def exemple_3_rapport_comparatif():
@@ -233,8 +244,10 @@ def exemple_4_grand_probleme():
     plt.title('Évolution de l\'algorithme génétique', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('../outputs/evolution_genetique.png', dpi=300)
-    print("\n✅ Graphique sauvegardé : outputs/evolution_genetique.png")
+    # Chemin absolu pour la sauvegarde
+    evolution_path = os.path.join(outputs_dir, 'evolution_genetique.png')
+    plt.savefig(evolution_path, dpi=300)
+    print(f"\n✅ Graphique sauvegardé : {os.path.relpath(evolution_path)}")
     plt.show()
     
     # Visualiser la meilleure solution

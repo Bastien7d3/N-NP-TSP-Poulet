@@ -1,35 +1,35 @@
-# Solveur TSP avec Contraintes de Livraison 🚚
+# Solveur TSP avec Contraintes de Livraison
 
 **Résolution du problème du voyageur de commerce adapté aux livraisons avec contraintes réalistes**
 
 Ce projet implémente trois algorithmes de résolution pour un problème TSP avec contraintes de carburant, de capacité et de poids variable. L'application simule des livraisons où le camion devient plus léger (et donc plus économe) au fil des livraisons.
 
-## 🎯 **Fonctionnalités Principales**
+## Fonctionnalités Principales
 
-### **Algorithmes Disponibles**
-- **🔬 Force Brute** : Énumération exhaustive garantissant l'optimum (≤ 10 sites)
-- **⚡ Glouton** : Heuristique du plus proche voisin (rapide, complexité O(n²))
-- **🧬 Génétique** : Métaheuristique évolutionniste (bon compromis qualité/temps)
+### Algorithmes Disponibles
+- **Force Brute** : Énumération exhaustive garantissant l'optimum (≤ 9 sites)
+- **Glouton** : Heuristique du plus proche voisin (rapide, complexité O(n²))
+- **Génétique** : Métaheuristique évolutionniste (bon compromis qualité/temps)
 
-### **Contraintes Réalistes**
-- ✅ Consommation de carburant variable selon le poids du camion
-- ✅ Obligation de retour au dépôt avec carburant suffisant
-- ✅ Capacité maximale du véhicule
-- ✅ Prise en compte des embouteillages
+### Contraintes Réalistes
+- Consommation de carburant variable selon le poids du camion
+- Obligation de retour au dépôt avec carburant suffisant
+- Capacité maximale du véhicule
+- Prise en compte des embouteillages
 
-## 🚀 **Installation et Utilisation**
+## Installation et Utilisation
 
-### **Prérequis**
+### Prérequis
 - Python 3.7+
 - Dépendances listées dans `requirements.txt`
 
-### **Installation**
+### Installation
 ```bash
 # Installer les dépendances
 pip install -r requirements.txt
 ```
 
-### **Lancement Rapide**
+### Lancement Rapide
 ```bash
 # Menu interactif avec exemples
 python main.py
@@ -44,9 +44,9 @@ python main.py --help
 python examples/exemple_utilisation.py
 ```
 
-## 📚 **Guide d'Utilisation**
+## Guide d'Utilisation
 
-### **Exemple Basique**
+### Exemple Basique
 ```python
 from src.index import Camion, GrapheLivraison
 from src.tsp_solver import SolveurTSP
@@ -64,48 +64,60 @@ print(f"Meilleure tournée : {tournee}")
 print(f"Consommation : {cout:.2f}L")
 ```
 
-## 🏗️ **Architecture du Projet**
+## Architecture du Projet
 
 ```
-📁 N-NP-TSP-Poulet/
-├── 📄 main.py                     # Point d'entrée principal
-├── 📄 requirements.txt            # Dépendances Python
-├── 📄 .gitignore                  # Fichiers à ignorer par Git
-├── 📄 README.md                   # Documentation principale
-├── 📁 src/                        # Code source principal
-│   ├── 📄 __init__.py             # Package Python
-│   ├── 📄 index.py                # Classes de base (Camion, GrapheLivraison)
-│   ├── 📄 tsp_solver.py           # Algorithmes de résolution TSP
-│   ├── 📄 analyse_performances.py # Outils d'analyse et benchmarking
-│   └── 📄 algo_scenario.py        # Générateur de scénarios de test
-├── � examples/                   # Exemples et démonstrations
-│   └── �📄 exemple_utilisation.py  # Menu interactif complet
-├── � outputs/                    # Fichiers générés (graphiques, rapports)
-│   └── 📄 README.md               # Documentation du dossier
-└── � docs/                       # Documentation supplémentaire
+N-NP-TSP-Poulet/
+├── main.py                     # Point d'entrée principal
+├── requirements.txt            # Dépendances Python
+├── .gitignore                  # Fichiers à ignorer par Git
+├── README.md                   # Documentation principale
+├── src/                        # Code source principal
+│   ├── __init__.py             # Package Python
+│   ├── index.py                # Classes de base (Camion, GrapheLivraison)
+│   ├── tsp_solver.py           # Algorithmes de résolution TSP
+│   ├── analyse_performances.py # Outils d'analyse et benchmarking
+│   └── algo_scenario.py        # Générateur de scénarios de test
+├── examples/                   # Exemples et démonstrations
+│   └── exemple_utilisation.py  # Menu interactif complet
+├── outputs/                    # Fichiers générés (graphiques, rapports)
+│   └── README.md               # Documentation du dossier
+└── docs/                       # Documentation supplémentaire
+    └── COMPLEXITE_ALGORITHMES.md # Analyse détaillée des complexités
 ```
 
-## � **Performances et Complexités**
+## Analyse de Complexité
 
-| Algorithme | Complexité | Usage Recommandé |
-|------------|------------|------------------|
-| **Force Brute** | O(n!) | n ≤ 10 sites |
-| **Glouton** | O(n²) | Toutes tailles |
-| **Génétique** | O(pop×gen×n²) | n > 10 sites |
+| Algorithme | Complexité | Usage Recommandé | Temps (10 sites) |
+|------------|------------|------------------|-------------------|
+| **Force Brute** | O(n!) | n ≤ 9 sites | 38.4s |
+| **Glouton** | O(n²) | Toutes tailles | 0.0001s |
+| **Génétique** | O(pop×gen×n) | n > 9 sites | 0.28s |
 
-## 🏆 **Résultats Remarquables**
+**Pour une analyse détaillée de la complexité, consultez [docs/COMPLEXITE_ALGORITHMES.md](docs/COMPLEXITE_ALGORITHMES.md)**
 
-### **Fiabilité de l'Algorithme Génétique**
-- ✅ **100% de solutions valides** générées (population initiale intelligente)
-- ✅ **Égale l'optimum** sur problèmes ≤ 10 sites  
-- ✅ **+14% d'amélioration** vs glouton sur 25 sites
-- ✅ **Temps raisonnable** : 6s pour 25 sites, 50 générations
+## Résultats Remarquables
 
-### **Innovations Techniques**
+### Fiabilité de l'Algorithme Génétique
+- 100% de solutions valides générées (population initiale intelligente)
+- Égale l'optimum sur problèmes ≤ 9 sites  
+- +13% d'amélioration vs glouton en moyenne
+- Temps raisonnable : 0.7s pour 15 sites, 100 générations
+
+### Innovations Techniques
 - **Initialisation hybride** : 40% variations glouton + 30% proches d'abord + 30% aléatoire
 - **Mutations intelligentes** : échange, inversion, déplacement
 - **Amélioration locale** : 2-opt sur 10% des enfants
 - **Élitisme adaptatif** : conservation des meilleures solutions
+
+## Validation et Tests
+
+Le projet inclut une suite complète de tests et d'analyses :
+
+1. **Tests unitaires** : Validation des algorithmes sur cas simples
+2. **Analyse de complexité** : Mesures empiriques des temps d'exécution
+3. **Comparaisons** : Évaluation sur graphes aléatoires et fixes
+4. **Visualisations** : Graphiques de complexité temporelle et évolution des coûts
 
 ---
 

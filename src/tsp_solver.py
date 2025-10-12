@@ -162,11 +162,11 @@ class SolveurTSP:
         Cette méthode teste TOUTES les permutations possibles des sites
         et garde la meilleure tournée valide.
         
-        ⚠️ ATTENTION : Complexité O(n!) - Utilisable uniquement pour n ≤ 10 sites
+        ⚠️ ATTENTION : Complexité O(n!) - Utilisable uniquement pour n ≤ 9 sites
         
         Exemples de temps d'exécution :
         - 5 sites : 120 permutations (instantané)
-        - 10 sites : 3 628 800 permutations (quelques secondes)
+        - 9 sites : 362 880 permutations (quelques secondes)
         - 15 sites : 1 307 674 368 000 permutations (impossible en pratique)
         
         Args:
@@ -175,7 +175,7 @@ class SolveurTSP:
         Returns:
             Tuple (meilleure_tournee, meilleur_cout)
         """
-        if self.graphe.n_sites > 10:
+        if self.graphe.n_sites > 9:
             raise ValueError(
                 f"Force brute impossible avec {self.graphe.n_sites} sites "
                 f"(il y aurait {math.factorial(self.graphe.n_sites):,} permutations à tester !)"
@@ -355,7 +355,7 @@ class SolveurTSP:
         print(f"Coût: {cout_glouton:.2f}L\n")
         
         # Force brute (si possible)
-        if self.graphe.n_sites <= 10:
+        if self.graphe.n_sites <= 9:
             print("2️⃣  Méthode FORCE BRUTE (Optimal)")
             print("─" * 70)
             tournee_fb, cout_fb = self.force_brute(verbose=False)

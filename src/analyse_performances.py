@@ -13,6 +13,7 @@ Date: 2025
 
 import time
 import math
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple, Callable
@@ -49,11 +50,11 @@ class AnalyseurPerformances:
         Returns:
             Tuple (temps_execution_secondes, resultat_fonction)
         """
-        debut = time.time()
+        debut = time.perf_counter()  # Plus précis que time.time()
         resultat = fonction(*args, **kwargs)
-        fin = time.time()
+        fin = time.perf_counter()
         temps = fin - debut
-        return temps, resultat
+        return max(temps, 1e-6), resultat  # Minimum 1 microseconde pour éviter 0
     
     
     def analyser_complexite_algorithme(self, 
@@ -155,79 +156,173 @@ class AnalyseurPerformances:
         Trace la complexité temporelle des algorithmes testés.
         
         Crée un graphique montrant :
-        - Temps d'exécution en fonction de n (échelle log)
-        - Courbes théoriques de référence (n², n!, etc.)
+        - Temps d'exécution en fonction de n (échelle normale seulement)
+        - Courbes théoriques O(n²) et O(n!) pour comparaison
         
         Args:
             sauvegarder: Chemin pour sauvegarder le graphique (optionnel)
-                        Exemple: 'resultats/complexite.png'
+                        Exemple: 'outputs/complexite.png'
         """
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        plt.figure(figsize=(14, 10))
         
-        # ===== GRAPHIQUE 1 : Échelle normale =====
-        ax1.set_title('Complexité temporelle (échelle normale)', fontsize=14, fontweight='bold')
-        ax1.set_xlabel('Nombre de sites (n)', fontsize=12)
-        ax1.set_ylabel('Temps d\'exécution (secondes)', fontsize=12)
-        ax1.grid(True, alpha=0.3)
+        # Configuration du graphique principal (échelle normale uniquement)
+        plt.title('Complexité Temporelle des Algorithmes TSP', fontsize=18, fontweight='bold', pad=20)
+        plt.xlabel('Nombre de sites (n)', fontsize=16)
+        plt.ylabel('Temps d\'exécution (secondes)', fontsize=16)
+        plt.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
         
-        # Tracer les résultats
+        # Couleurs distinctes pour chaque algorithme
+        colors = {'force_brute': '#e74c3c', 'glouton': '#2ecc71', 'genetique': '#3498db'}
+        markers = {'force_brute': 'o', 'glouton': 's', 'genetique': '^'}
+        
+        # Tracer les résultats expérimentaux avec plus de détails
         for methode, data in self.resultats.items():
-            if len(data['n']) > 0:
-                label = methode.replace('_', ' ').title()
-                ax1.plot(data['n'], data['temps'], 'o-', linewidth=2, 
-                        markersize=8, label=label)
+            if len(data['n']) > 0 and len(data['temps']) > 0:
+                # Noms plus explicites
+                labels_map = {
+                    'force_brute': 'Force Brute',
+                    'glouton': 'Glouton (Plus Proche Voisin)', 
+                    'genetique': 'Algorothme Génétique'
+                }
+                label = labels_map.get(methode, methode.title())
+                color = colors.get(methode, '#34495e')
+                marker = markers.get(methode, 'o')
+                
+                plt.plot(data['n'], data['temps'], 
+                        marker=marker, linestyle='-', linewidth=3, markersize=12,
+                        color=color, label=f'{label} (expérimental)', alpha=0.9,
+                        markeredgecolor='white', markeredgewidth=2)
         
-        ax1.legend(fontsize=11)
-        
-        # ===== GRAPHIQUE 2 : Échelle logarithmique =====
-        ax2.set_title('Complexité temporelle (échelle log)', fontsize=14, fontweight='bold')
-        ax2.set_xlabel('Nombre de sites (n)', fontsize=12)
-        ax2.set_ylabel('Temps d\'exécution (secondes, log)', fontsize=12)
-        ax2.set_yscale('log')
-        ax2.grid(True, alpha=0.3, which='both')
-        
-        # Tracer les résultats
-        for methode, data in self.resultats.items():
-            if len(data['n']) > 0:
-                label = methode.replace('_', ' ').title()
-                ax2.plot(data['n'], data['temps'], 'o-', linewidth=2, 
-                        markersize=8, label=label)
-        
-        # Ajouter des courbes théoriques de référence
+        # Ajouter les courbes théoriques O(n!) et O(n²)
         if len(self.resultats['force_brute']['n']) > 0:
-            n_max = max(self.resultats['force_brute']['n'])
-            n_ref = np.arange(1, n_max + 1)
+            # Prendre les données de force brute pour calibrer O(n!)
+            n_fb = np.array(self.resultats['force_brute']['n'])
+            t_fb = np.array(self.resultats['force_brute']['temps'])
             
-            # Calibrer sur le premier point
-            t_ref = self.resultats['force_brute']['temps'][0]
-            n_ref_val = self.resultats['force_brute']['n'][0]
-            
-            # O(n!)
-            factorielle = np.array([math.factorial(n) for n in n_ref])
-            factorielle_normalisee = t_ref * (factorielle / math.factorial(n_ref_val))
-            ax2.plot(n_ref, factorielle_normalisee, '--', alpha=0.5, 
-                    label='O(n!) théorique', color='red')
+            if len(n_fb) >= 2:
+                # Générer courbe O(n!) théorique
+                n_max = min(12, max(n_fb))  # Jusqu'à 12 maintenant
+                n_theory = np.arange(3, n_max + 1)
+                
+                # Calibrer sur le premier point non-nul
+                valid_indices = t_fb > 0
+                if np.any(valid_indices):
+                    n_calib = n_fb[valid_indices][0]
+                    t_calib = t_fb[valid_indices][0]
+                    
+                    # O(n!) normalisé
+                    factorial_theory = np.array([math.factorial(n) for n in n_theory])
+                    factorial_normalized = t_calib * (factorial_theory / math.factorial(n_calib))
+                    
+                    plt.plot(n_theory, factorial_normalized, 
+                            '--', linewidth=3, color='#c0392b', alpha=0.8,
+                            label='O(n!) théorique')
         
         if len(self.resultats['glouton']['n']) > 0:
-            n_max = max(self.resultats['glouton']['n'])
-            n_ref = np.arange(1, n_max + 1)
+            # Prendre les données du glouton pour calibrer O(n²)
+            n_gl = np.array(self.resultats['glouton']['n'])
+            t_gl = np.array(self.resultats['glouton']['temps'])
             
-            # Calibrer sur le premier point
-            t_ref = self.resultats['glouton']['temps'][0]
-            n_ref_val = self.resultats['glouton']['n'][0]
-            
-            # O(n²)
-            quadratique = n_ref ** 2
-            quadratique_normalise = t_ref * (quadratique / (n_ref_val ** 2))
-            ax2.plot(n_ref, quadratique_normalise, '--', alpha=0.5, 
-                    label='O(n²) théorique', color='green')
+            if len(n_gl) >= 2:
+                # Générer courbe O(n²) théorique
+                n_max = max(n_gl)
+                n_theory = np.arange(3, min(int(n_max) + 1, 50))  # Limiter pour lisibilité
+                
+                # Calibrer sur le point le plus grand pour éviter les problèmes de précision
+                valid_indices = t_gl > 0
+                if np.any(valid_indices):
+                    n_valid = n_gl[valid_indices]
+                    t_valid = t_gl[valid_indices]
+                    
+                    # Prendre le point le plus élevé pour calibrer
+                    max_idx = np.argmax(n_valid)
+                    n_calib = n_valid[max_idx]
+                    t_calib = t_valid[max_idx]
+                    
+                    # O(n²) normalisé
+                    quadratic_theory = n_theory ** 2
+                    quadratic_normalized = t_calib * (quadratic_theory / (n_calib ** 2))
+                    
+                    plt.plot(n_theory, quadratic_normalized, 
+                            '--', linewidth=3, color='#27ae60', alpha=0.8,
+                            label='O(n²) théorique')
         
-        ax2.legend(fontsize=11)
+        # Configuration de la légende et du style
+        plt.legend(fontsize=14, loc='upper left', frameon=True, shadow=True, 
+                  fancybox=True, framealpha=0.9)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        
+        # Améliorer l'apparence
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['left'].set_linewidth(1)
+        plt.gca().spines['bottom'].set_linewidth(1)
+        
+        # Ajouter un texte informatif
+        plt.text(0.02, 0.98, 
+                'Échelle normale - Comparaison avec complexités théoriques',
+                transform=plt.gca().transAxes, fontsize=12, 
+                verticalalignment='top', style='italic', alpha=0.7)
         
         plt.tight_layout()
         
         if sauvegarder:
-            plt.savefig(sauvegarder, dpi=300, bbox_inches='tight')
+            # S'assurer que le dossier parent existe
+            os.makedirs(os.path.dirname(sauvegarder), exist_ok=True)
+            plt.savefig(sauvegarder, dpi=300, bbox_inches='tight', facecolor='white')
+            print(f"✅ Graphique sauvegardé : {sauvegarder}")
+        
+        plt.show()
+    
+    
+    def tracer_evolution_cout(self, sauvegarder: str = None):
+        """
+        Trace l'évolution du coût (consommation) en fonction du nombre de sites.
+        
+        Args:
+            sauvegarder: Chemin pour sauvegarder le graphique (optionnel)
+        """
+        plt.figure(figsize=(12, 8))
+        
+        # Configuration du graphique
+        plt.title('Évolution de la Consommation de Carburant', fontsize=16, fontweight='bold', pad=20)
+        plt.xlabel('Nombre de sites (n)', fontsize=14)
+        plt.ylabel('Consommation de carburant (L)', fontsize=14)
+        plt.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+        
+        # Couleurs et styles
+        colors = {'force_brute': '#e74c3c', 'glouton': '#2ecc71', 'genetique': '#3498db'}
+        markers = {'force_brute': 'o', 'glouton': 's', 'genetique': '^'}
+        
+        # Tracer les résultats
+        for methode, data in self.resultats.items():
+            if len(data['n']) > 0 and len(data['couts']) > 0:
+                label = methode.replace('_', ' ').title()
+                color = colors.get(methode, '#34495e')
+                marker = markers.get(methode, 'o')
+                
+                plt.plot(data['n'], data['couts'], 
+                        marker=marker, linestyle='-', linewidth=3, markersize=10,
+                        color=color, label=label, alpha=0.8)
+        
+        # Configuration de la légende et du style
+        plt.legend(fontsize=12, loc='upper left', frameon=True, shadow=True)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        
+        # Améliorer l'apparence
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['left'].set_linewidth(0.5)
+        plt.gca().spines['bottom'].set_linewidth(0.5)
+        
+        plt.tight_layout()
+        
+        if sauvegarder:
+            # S'assurer que le dossier parent existe
+            os.makedirs(os.path.dirname(sauvegarder), exist_ok=True)
+            plt.savefig(sauvegarder, dpi=300, bbox_inches='tight', facecolor='white')
             print(f"✅ Graphique sauvegardé : {sauvegarder}")
         
         plt.show()
